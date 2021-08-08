@@ -36,7 +36,8 @@ namespace Teller.Logic
 
         public TellerStock Checkout(TellerStock inserted, int price)
         {
-            logger.Debug("Checking out for a price of {price}", price);
+            price = primaryCurrency.Rounded(price);
+            logger.Info("Checking out for a price of {price}", price);
             logger.Debug("Stock was {stock}", currencyStock[primaryCurrency].ToString());
             logger.Debug("Inserted is {inserted}", inserted.ToString());
             var giveBackValue = inserted.TotalValue() - price;
