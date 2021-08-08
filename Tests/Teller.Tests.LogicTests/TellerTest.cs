@@ -45,12 +45,15 @@ namespace Teller.Tests.LogicTests
             Assert.Equal(expectedStock, actualStock);
         }
 
-        [Fact]
-        public void Checkout()
+        [Theory]
+        [InlineData(3000)]
+        [InlineData(3200)]
+        [InlineData(3500)] 
+        [InlineData(3005)]
+        public void Checkout(int price)
         {
             // Arrange
             StockUpPlenty();
-            var price = 3200;
             var inserted = new TellerStock(new[] {
                 defaultCurrency.GetLegalTender(1000).MakeStock(3),
                 defaultCurrency.GetLegalTender(500).MakeStock(1),

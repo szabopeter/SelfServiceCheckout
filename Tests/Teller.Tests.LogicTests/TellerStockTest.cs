@@ -34,12 +34,31 @@ namespace Teller.Tests.LogicTests
             Assert.Equal(expectedValue, actualValue);
         }
 
+        [Theory]
+        [InlineData(100, 2, 2, 3)]
+        [InlineData(20, 0, 4, 1)]
+        public void StockUpNonEmpty(int legalTender, int initial, int repeats, int toAdd)
+        {
+            // Arrange
+            var hundredNote = defaultCurrency.GetLegalTender(legalTender);
+            var stock = new TellerStock(hundredNote.MakeStock(initial));
+
+            // Act
+            for (var i = 0; i < repeats; i++)
+            {
+                stock = stock.StockUp(hundredNote.MakeStock(toAdd));
+            }
+
+            // Assert
+            Assert.Equal(initial + repeats * toAdd, stock.GetCount(hundredNote));
+        }
+
         [Fact]
-        public void StockUp()
+        public void StockUpEmpty()
         {
             // Arrange
             var stock = new TellerStock(new LegalTenderStock[0]);
-            
+
             // Act
             stock = stock.StockUp(defaultCurrency.GetLegalTender(1000).MakeStock(2));
 

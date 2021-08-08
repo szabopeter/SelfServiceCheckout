@@ -1,9 +1,12 @@
 using System;
 using System.Collections.Generic;
+using System.Diagnostics;
 using System.Linq;
+using NLog;
 
 namespace Teller.Logic
 {
+    [DebuggerDisplay("{" + nameof(GetDebuggerDisplay) + "(),nq}")]
     public class TellerStock
     {
         public IEnumerable<LegalTenderStock> Stocks { get; }
@@ -11,23 +14,30 @@ namespace Teller.Logic
         public TellerStock(IEnumerable<LegalTenderStock> stocks)
         {
             Stocks = stocks.ToList();
+            LogManager.GetCurrentClassLogger().Debug("New TellerStock {stocks}", ToString());
+        }
+
+        public TellerStock() : this(new LegalTenderStock[0])
+        {
+        }
+
+        public TellerStock(LegalTenderStock stock) : this(new[] { stock })
+        {
         }
 
         public TellerStock StockUp(TellerStock stockUp)
         {
-            return new TellerStock(Stocks.Union(stockUp.Stocks)
+            var combined = Stocks.Concat(stockUp.Stocks);
+            return new TellerStock(combined
                 .GroupBy(
                     legalTenderStock => legalTenderStock.LegalTender,
                     legalTenderStock => legalTenderStock.Count,
-                    (legalTender, items) => new LegalTenderStock(legalTender, items.Sum())
+                    (legalTender, counts) => legalTender.MakeStock(counts.Sum())
                 )
             );
         }
 
-        public TellerStock StockUp(LegalTenderStock stockUp)
-        {
-            return StockUp(new TellerStock(new[] { stockUp }));
-        }
+        public TellerStock StockUp(LegalTenderStock stockUp) => StockUp(new TellerStock(stockUp));
 
         public int TotalValue()
         {
@@ -73,9 +83,8 @@ namespace Teller.Logic
         /// <returns>New stock and the stock to give back</returns>
         public (TellerStock, TellerStock) PayOut(int giveBackValue)
         {
-            Console.WriteLine($"Giving back {giveBackValue}");
             var stockLeft = this;
-            var giveBack = new TellerStock(new LegalTenderStock[0]);
+            var giveBack = new TellerStock();
             var legalTendersAvailable = Stocks
                 .Select(stock => stock.LegalTender)
                 .OrderByDescending(legalTender => legalTender.Value)
@@ -90,8 +99,8 @@ namespace Teller.Logic
                         break;
                     }
 
-                    stockLeft = stockLeft.StockUp(new LegalTenderStock(legalTender, -1));
-                    giveBack = giveBack.StockUp(new LegalTenderStock(legalTender, 1));
+                    stockLeft = stockLeft.StockUp(legalTender.MakeStock(-1));
+                    giveBack = giveBack.StockUp(legalTender.MakeStock(1));
                     giveBackValue -= legalTender.Value;
                 }
             }
@@ -99,9 +108,15 @@ namespace Teller.Logic
             return (stockLeft, giveBack);
         }
 
-        public override int GetHashCode()
+        public override int GetHashCode() => Stocks.Count();
+
+        private string GetDebuggerDisplay() => ToString();
+
+        public override string ToString() => FormatStocks(Stocks);
+
+        private string FormatStocks(IEnumerable<LegalTenderStock> stocks)
         {
-            return Stocks.Count();
+            return string.Join("+", stocks.Select(stock => $"{stock.LegalTender.Value}*{stock.Count}"));            
         }
-    }
+   }
 }
