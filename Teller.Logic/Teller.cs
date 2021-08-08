@@ -17,5 +17,10 @@ namespace Teller.Logic
         {
             return new TellerStock(primaryCurrency.LegalTenderList.InitializeStock());
         }
+
+        public void Stock(TellerStock stockUp)
+        {
+            
+        }
     }
 }

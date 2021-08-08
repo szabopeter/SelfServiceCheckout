@@ -11,7 +11,10 @@ namespace Teller.Logic
         public LegalTenderList(IEnumerable<LegalTenderDefinition> definitions)
         {
             this.definitions = definitions.ToList();
+            // TODO this.definitions.ToDictionary(x=> x);
         }
+
+        public IEnumerable<LegalTenderDefinition> GetDefinitions() => definitions;
 
         public static LegalTenderList FromValues(params int[] values)
         {
