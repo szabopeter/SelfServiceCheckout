@@ -8,6 +8,7 @@ namespace Teller.Logic
         private readonly TellerCurrency primaryCurrency;
         private readonly TellerCurrencyCollection additionalCurrencies;
         private readonly Dictionary<TellerCurrency, TellerStock> currencyStock;
+        private readonly object currencyStockLock = new object();
         private readonly ILogger logger;
 
         public Teller(TellerCurrency primaryCurrency)
@@ -22,7 +23,10 @@ namespace Teller.Logic
 
         public TellerStock GetStock()
         {
-            return currencyStock[primaryCurrency];
+            lock (currencyStockLock)
+            {
+                return currencyStock[primaryCurrency];
+            }
         }
 
         /// <summary>
@@ -31,25 +35,32 @@ namespace Teller.Logic
         /// <param name="stockUp">The delta change, positive values for adding, negatives for removing</param>
         public void Stock(TellerStock stockUp)
         {
-            currencyStock[primaryCurrency] = currencyStock[primaryCurrency].StockUp(stockUp);
+            lock (currencyStockLock)
+            {
+                currencyStock[primaryCurrency] = currencyStock[primaryCurrency].StockUp(stockUp);
+            }
         }
 
         public TellerStock Checkout(TellerStock inserted, int price)
         {
             price = primaryCurrency.Rounded(price);
             logger.Info("Checking out for a price of {price}", price);
-            logger.Debug("Stock was {stock}", currencyStock[primaryCurrency].ToString());
+            logger.Debug("Stock was around {stock}", currencyStock[primaryCurrency].ToString());
             logger.Debug("Inserted is {inserted}", inserted.ToString());
             var giveBackValue = inserted.TotalValue() - price;
             if (giveBackValue < 0)
             {
                 throw new InsufficientInsertionException();
             }
-            currencyStock[primaryCurrency] = currencyStock[primaryCurrency].StockUp(inserted);
-            var (newStock, giveBack) = currencyStock[primaryCurrency].PayOut(giveBackValue);
-            currencyStock[primaryCurrency] = newStock;
-            // can save state here
-            return giveBack;
+
+            lock (currencyStockLock)
+            {
+                currencyStock[primaryCurrency] = currencyStock[primaryCurrency].StockUp(inserted);
+                var (newStock, giveBack) = currencyStock[primaryCurrency].PayOut(giveBackValue);
+                currencyStock[primaryCurrency] = newStock;
+                // can save state here
+                return giveBack;
+            }
         }
     }
 }
