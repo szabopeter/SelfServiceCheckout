@@ -94,19 +94,48 @@ namespace Teller.Tests.LogicTests
         public void StockSufficientFromSmallerUnits()
         {
             // Arrange
-            var tenCoin = defaultCurrency.GetLegalTender(10);
-            var fiveCoin = defaultCurrency.GetLegalTender(5);
+            var tenners = defaultCurrency.GetLegalTender(10);
+            var fivers = defaultCurrency.GetLegalTender(5);
             sut.Stock(new TellerStock(new[] {
-                tenCoin.MakeStock(3),
-                fiveCoin.MakeStock(4),
+                tenners.MakeStock(3),
+                fivers.MakeStock(4),
             }));
 
             // Act
             var giveBack = sut.Checkout(new TellerStock(defaultCurrency.GetLegalTender(100).MakeStock(1)), 50);
 
             // Assert
-            Assert.Equal(3, giveBack.GetCount(tenCoin));
-            Assert.Equal(4, giveBack.GetCount(fiveCoin));
+            Assert.Equal(3, giveBack.GetCount(tenners));
+            Assert.Equal(4, giveBack.GetCount(fivers));
+        }
+
+        public enum Sufficiency { Sufficient, Insufficient }
+
+        [Theory]
+        [InlineData(19, 4, Sufficiency.Sufficient)]
+        [InlineData(20, 4, Sufficiency.Sufficient)]
+        [InlineData(21, 4, Sufficiency.Sufficient)]
+        [InlineData(22, 4, Sufficiency.Sufficient)]
+        [InlineData(23, 4, Sufficiency.Insufficient)]
+        [InlineData(23, 5, Sufficiency.Sufficient)]
+        public void Rounding(int price, int fivers, Sufficiency expectedSufficiency)
+        {
+            // Arrange
+            StockUpPlenty();
+            var insert = new TellerStock(defaultCurrency.GetLegalTender(5).MakeStock(fivers));
+
+            // Act
+            var actualSufficiency = Sufficiency.Sufficient;
+            try
+            {
+                var giveBack = sut.Checkout(insert, price);
+                Assert.Equal(0, giveBack.TotalValue());
+            } catch (InsufficientInsertionException)
+            {
+                actualSufficiency = Sufficiency.Insufficient;
+            }
+
+            Assert.Equal(expectedSufficiency, actualSufficiency);
         }
 
         private void StockUpPlenty()
