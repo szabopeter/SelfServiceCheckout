@@ -105,6 +105,11 @@ namespace Teller.Logic
                 }
             }
 
+            if (giveBackValue > 0)
+            {
+                throw new InsufficientStocksException();
+            }
+
             return (stockLeft, giveBack);
         }
 

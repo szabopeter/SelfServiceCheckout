@@ -1,4 +1,5 @@
 ﻿using System.Collections.Generic;
+using NLog;
 
 namespace Teller.Logic
 {
@@ -7,9 +8,11 @@ namespace Teller.Logic
         private readonly TellerCurrency primaryCurrency;
         private readonly TellerCurrencyCollection additionalCurrencies;
         private readonly Dictionary<TellerCurrency, TellerStock> currencyStock;
+        private readonly ILogger logger;
 
         public Teller(TellerCurrency primaryCurrency)
         {
+            logger = LogManager.GetCurrentClassLogger();
             this.primaryCurrency = primaryCurrency;
             additionalCurrencies = new TellerCurrencyCollection();
             currencyStock = new Dictionary<TellerCurrency, TellerStock>{
@@ -33,6 +36,9 @@ namespace Teller.Logic
 
         public TellerStock Checkout(TellerStock inserted, int price)
         {
+            logger.Debug("Checking out for a price of {price}", price);
+            logger.Debug("Stock was {stock}", currencyStock[primaryCurrency].ToString());
+            logger.Debug("Inserted is {inserted}", inserted.ToString());
             var giveBackValue = inserted.TotalValue() - price;
             if (giveBackValue < 0)
             {
