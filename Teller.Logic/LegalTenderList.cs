@@ -1,3 +1,4 @@
+using System;
 using System.Collections.Generic;
 using System.Linq;
 
@@ -15,6 +16,11 @@ namespace Teller.Logic
         public static LegalTenderList FromValues(params int[] values)
         {
             return new LegalTenderList(values.Select(LegalTenderDefinition.FromValue));
+        }
+
+        internal IEnumerable<LegalTenderStock> InitializeStock()
+        {
+            return definitions.Select(definition => new LegalTenderStock(definition.Value, 0));
         }
     }
 }

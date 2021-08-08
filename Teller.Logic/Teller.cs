@@ -12,5 +12,10 @@ namespace Teller.Logic
             this.primaryCurrency = primaryCurrency;
             this.additionalCurrencies = new TellerCurrencyCollection();
         }
+
+        public TellerStock GetStock()
+        {
+            return new TellerStock(primaryCurrency.LegalTenderList.InitializeStock());
+        }
     }
 }
