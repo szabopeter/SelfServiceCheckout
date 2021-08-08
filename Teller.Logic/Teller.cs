@@ -34,7 +34,13 @@ namespace Teller.Logic
 
         public TellerStock Checkout(TellerStock inserted, int price)
         {
-            return null;
+            var giveBackValue = inserted.TotalValue() - price;
+            // TODO inserted is not sufficient
+            currencyStock[primaryCurrency] = currencyStock[primaryCurrency].StockUp(inserted);
+            var (newStock, giveBack) = currencyStock[primaryCurrency].PayOut(giveBackValue);
+            currencyStock[primaryCurrency] = newStock;
+            // can save state here
+            return giveBack;
         }
     }
 }

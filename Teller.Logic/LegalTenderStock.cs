@@ -10,6 +10,7 @@ namespace Teller.Logic
         public LegalTenderStock(LegalTenderDefinition legalTenderDefinition, int count)
         {
             LegalTender = legalTenderDefinition ?? throw new ArgumentNullException(nameof(legalTenderDefinition));
+            Count = count;
             if (Count > legalTenderDefinition.MaxCount)
             {
                 throw new ArgumentOutOfRangeException(nameof(count));

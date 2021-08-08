@@ -34,6 +34,18 @@ namespace Teller.Logic
             return Stocks.Select(legalTenderStock => legalTenderStock.LegalTender.Value * legalTenderStock.Count).Sum();
         }
 
+        public int GetCount(LegalTenderDefinition legalTender)
+            => Stocks.Single(stock => stock.LegalTender == legalTender).Count;
+
+        public void CheckForNegative()
+        {
+            if (Stocks.Any(stock => stock.Count < 0))
+            {
+                // throw new NegativeStockException();
+                throw new InvalidOperationException();
+            }
+        }
+
         public override bool Equals(object obj)
         {
             if (object.ReferenceEquals(this, obj))
@@ -52,6 +64,39 @@ namespace Teller.Logic
             var ours = Stocks.OrderBy(legalTenderStock => legalTenderStock.LegalTender.Value).ToList();
             var theirs = other.Stocks.OrderBy(legalTenderStock => legalTenderStock.LegalTender.Value).ToList();
             return ours.SequenceEqual(theirs);
+        }
+
+        /// <summary>
+        /// Calculate the change to be given back and the remaining stock
+        /// </summary>
+        /// <param name="giveBackValue"></param>
+        /// <returns>New stock and the stock to give back</returns>
+        public (TellerStock, TellerStock) PayOut(int giveBackValue)
+        {
+            Console.WriteLine($"Giving back {giveBackValue}");
+            var stockLeft = this;
+            var giveBack = new TellerStock(new LegalTenderStock[0]);
+            var legalTendersAvailable = Stocks
+                .Select(stock => stock.LegalTender)
+                .OrderByDescending(legalTender => legalTender.Value)
+                .ToArray();
+
+            foreach (var legalTender in legalTendersAvailable)
+            {
+                while (legalTender.Value <= giveBackValue)
+                {
+                    if (stockLeft.GetCount(legalTender) < 1)
+                    {
+                        break;
+                    }
+
+                    stockLeft = stockLeft.StockUp(new LegalTenderStock(legalTender, -1));
+                    giveBack = giveBack.StockUp(new LegalTenderStock(legalTender, 1));
+                    giveBackValue -= legalTender.Value;
+                }
+            }
+
+            return (stockLeft, giveBack);
         }
 
         public override int GetHashCode()

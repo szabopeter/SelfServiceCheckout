@@ -49,26 +49,29 @@ namespace Teller.Tests.LogicTests
         public void Checkout()
         {
             // Arrange
-            StockUpToMax();
+            StockUpPlenty();
             var price = 3200;
             var inserted = new TellerStock(new[] {
                 defaultCurrency.GetLegalTender(1000).MakeStock(3),
                 defaultCurrency.GetLegalTender(500).MakeStock(1),
             });
 
+            // Precondition
+            const int insertedSum = 3500;
+            Assert.Equal(insertedSum, inserted.TotalValue());
+
             // Act
             var givenBack = sut.Checkout(inserted, price);
 
             // Assert
-            var expectedTotal = price;
-            var actualTotal = inserted.StockUp(givenBack).TotalValue();
-            Assert.Equal(expectedTotal, actualTotal);
+            var expectedGiveBackSum = insertedSum - price;
+            Assert.Equal(expectedGiveBackSum, givenBack.TotalValue());
         }
 
-        private void StockUpToMax()
+        private void StockUpPlenty()
         {
             sut.Stock(new TellerStock(defaultCurrency.LegalTenderList.GetDefinitions()
-                .Select(legalTender => legalTender.MakeStock(legalTender.MaxCount))));
+                .Select(legalTender => legalTender.MakeStock(legalTender.MaxCount / 2))));
         }
     }
 }

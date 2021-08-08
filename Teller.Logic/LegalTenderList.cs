@@ -19,7 +19,7 @@ namespace Teller.Logic
         public static LegalTenderList FromValues(params int[] values)
         {
             // TODO Allow specifying maxCount
-            return new LegalTenderList(values.Select(value => LegalTenderDefinition.FromValue(value, int.MaxValue)));
+            return new LegalTenderList(values.Select(value => LegalTenderDefinition.FromValue(value, 9999)));
         }
 
         public TellerStock InitializeStock()
