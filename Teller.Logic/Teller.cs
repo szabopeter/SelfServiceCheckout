@@ -14,7 +14,7 @@ namespace Teller.Logic
             this.primaryCurrency = primaryCurrency;
             additionalCurrencies = new TellerCurrencyCollection();
             currencyStock = new Dictionary<TellerCurrency, TellerStock>{
-                {primaryCurrency, new TellerStock(primaryCurrency.LegalTenderList.InitializeStock())}
+                {primaryCurrency, primaryCurrency.LegalTenderList.InitializeStock()}
             };
         }
 
@@ -30,6 +30,11 @@ namespace Teller.Logic
         public void Stock(TellerStock stockUp)
         {
             currencyStock[primaryCurrency] = currencyStock[primaryCurrency].StockUp(stockUp);
+        }
+
+        public TellerStock Checkout(TellerStock inserted, int price)
+        {
+            return null;
         }
     }
 }

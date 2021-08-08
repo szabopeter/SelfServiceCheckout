@@ -18,12 +18,14 @@ namespace Teller.Logic
 
         public static LegalTenderList FromValues(params int[] values)
         {
-            return new LegalTenderList(values.Select(LegalTenderDefinition.FromValue));
+            // TODO Allow specifying maxCount
+            return new LegalTenderList(values.Select(value => LegalTenderDefinition.FromValue(value, int.MaxValue)));
         }
 
-        internal IEnumerable<LegalTenderStock> InitializeStock()
+        public TellerStock InitializeStock()
         {
-            return definitions.Select(definition => new LegalTenderStock(definition.Value, 0));
+            var stocks = definitions.Select(definition => new LegalTenderStock(definition, 0));
+            return new TellerStock(stocks);
         }
     }
 }

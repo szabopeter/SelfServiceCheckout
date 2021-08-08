@@ -1,4 +1,5 @@
 using System.Collections.Generic;
+using System.Linq;
 
 namespace Teller.Logic
 {
@@ -11,6 +12,11 @@ namespace Teller.Logic
         {
             CurrencyName = currencyName;
             LegalTenderList = legalTenderList;
+        }
+
+        public LegalTenderDefinition GetLegalTender(int value)
+        {
+            return LegalTenderList.GetDefinitions().Single(definition => definition.Value == value);
         }
     }
 }

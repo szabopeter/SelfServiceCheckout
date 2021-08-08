@@ -29,21 +29,46 @@ namespace Teller.Tests.LogicTests
         public void StockUp()
         {
             // Arrange
-            var expectedStock = new Dictionary<int, int>();
+            var expectedStock = defaultCurrency.LegalTenderList.InitializeStock();
             var expectedCount = 1;
             foreach (var legalTender in defaultCurrency.LegalTenderList.GetDefinitions())
             {
-                expectedStock[legalTender.Value] = expectedCount;
+                expectedStock = expectedStock.StockUp(new LegalTenderStock(legalTender, expectedCount));
                 expectedCount *= 2;
             }
 
             // Act
-            var stockUp = new TellerStock(expectedStock.Select(valueCountPair => new LegalTenderStock(valueCountPair.Key, valueCountPair.Value)));
-            sut.Stock(stockUp);
+            sut.Stock(expectedStock);
 
             // Assert
             var actualStock = sut.GetStock();
-            Assert.Equal(expectedStock, actualStock.Stocks.ToDictionary(stock => stock.Value, stock => stock.Count));
+            Assert.Equal(expectedStock, actualStock);
+        }
+
+        [Fact]
+        public void Checkout()
+        {
+            // Arrange
+            StockUpToMax();
+            var price = 3200;
+            var inserted = new TellerStock(new[] {
+                defaultCurrency.GetLegalTender(1000).MakeStock(3),
+                defaultCurrency.GetLegalTender(500).MakeStock(1),
+            });
+
+            // Act
+            var givenBack = sut.Checkout(inserted, price);
+
+            // Assert
+            var expectedTotal = price;
+            var actualTotal = inserted.StockUp(givenBack).TotalValue();
+            Assert.Equal(expectedTotal, actualTotal);
+        }
+
+        private void StockUpToMax()
+        {
+            sut.Stock(new TellerStock(defaultCurrency.LegalTenderList.GetDefinitions()
+                .Select(legalTender => legalTender.MakeStock(legalTender.MaxCount))));
         }
     }
 }
