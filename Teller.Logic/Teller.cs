@@ -1,5 +1,4 @@
-﻿using System;
-using System.Collections.Generic;
+﻿using System.Collections.Generic;
 
 namespace Teller.Logic
 {
@@ -35,7 +34,10 @@ namespace Teller.Logic
         public TellerStock Checkout(TellerStock inserted, int price)
         {
             var giveBackValue = inserted.TotalValue() - price;
-            // TODO inserted is not sufficient
+            if (giveBackValue < 0)
+            {
+                throw new InsufficientInsertionException();
+            }
             currencyStock[primaryCurrency] = currencyStock[primaryCurrency].StockUp(inserted);
             var (newStock, giveBack) = currencyStock[primaryCurrency].PayOut(giveBackValue);
             currencyStock[primaryCurrency] = newStock;

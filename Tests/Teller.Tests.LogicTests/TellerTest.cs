@@ -68,6 +68,16 @@ namespace Teller.Tests.LogicTests
             Assert.Equal(expectedGiveBackSum, givenBack.TotalValue());
         }
 
+        [Fact]
+        public void CheckoutInsufficient()
+        {
+            StockUpPlenty();
+            // Act
+            Assert.ThrowsAny<InsufficientInsertionException>(
+                () => sut.Checkout(new TellerStock(new LegalTenderStock[0]), 1000)
+            );
+        }
+
         private void StockUpPlenty()
         {
             sut.Stock(new TellerStock(defaultCurrency.LegalTenderList.GetDefinitions()
