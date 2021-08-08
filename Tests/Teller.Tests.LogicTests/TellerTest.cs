@@ -90,6 +90,25 @@ namespace Teller.Tests.LogicTests
             );
         }
 
+        [Fact]
+        public void StockSufficientFromSmallerUnits()
+        {
+            // Arrange
+            var tenCoin = defaultCurrency.GetLegalTender(10);
+            var fiveCoin = defaultCurrency.GetLegalTender(5);
+            sut.Stock(new TellerStock(new[] {
+                tenCoin.MakeStock(3),
+                fiveCoin.MakeStock(4),
+            }));
+
+            // Act
+            var giveBack = sut.Checkout(new TellerStock(defaultCurrency.GetLegalTender(100).MakeStock(1)), 50);
+
+            // Assert
+            Assert.Equal(3, giveBack.GetCount(tenCoin));
+            Assert.Equal(4, giveBack.GetCount(fiveCoin));
+        }
+
         private void StockUpPlenty()
         {
             sut.Stock(new TellerStock(defaultCurrency.LegalTenderList.GetDefinitions()
