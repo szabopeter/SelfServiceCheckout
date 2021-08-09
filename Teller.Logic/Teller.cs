@@ -5,7 +5,7 @@ namespace Teller.Logic
 {
     public class Teller
     {
-        private readonly TellerCurrency primaryCurrency;
+        public TellerCurrency PrimaryCurrency { get; }
         private readonly TellerCurrencyCollection additionalCurrencies;
         private readonly Dictionary<TellerCurrency, TellerStock> currencyStock;
         private readonly object currencyStockLock = new object();
@@ -14,7 +14,7 @@ namespace Teller.Logic
         public Teller(TellerCurrency primaryCurrency)
         {
             logger = LogManager.GetCurrentClassLogger();
-            this.primaryCurrency = primaryCurrency;
+            this.PrimaryCurrency = primaryCurrency;
             additionalCurrencies = new TellerCurrencyCollection();
             currencyStock = new Dictionary<TellerCurrency, TellerStock>{
                 {primaryCurrency, primaryCurrency.LegalTenderList.InitializeStock()}
@@ -25,7 +25,7 @@ namespace Teller.Logic
         {
             lock (currencyStockLock)
             {
-                return currencyStock[primaryCurrency];
+                return currencyStock[PrimaryCurrency];
             }
         }
 
@@ -37,15 +37,15 @@ namespace Teller.Logic
         {
             lock (currencyStockLock)
             {
-                currencyStock[primaryCurrency] = currencyStock[primaryCurrency].StockUp(stockUp);
+                currencyStock[PrimaryCurrency] = currencyStock[PrimaryCurrency].StockUp(stockUp);
             }
         }
 
         public TellerStock Checkout(TellerStock inserted, int price)
         {
-            price = primaryCurrency.Rounded(price);
+            price = PrimaryCurrency.Rounded(price);
             logger.Info("Checking out for a price of {price}", price);
-            logger.Debug("Stock was around {stock}", currencyStock[primaryCurrency].ToString());
+            logger.Debug("Stock was around {stock}", currencyStock[PrimaryCurrency].ToString());
             logger.Debug("Inserted is {inserted}", inserted.ToString());
             var giveBackValue = inserted.TotalValue() - price;
             if (giveBackValue < 0)
@@ -55,9 +55,9 @@ namespace Teller.Logic
 
             lock (currencyStockLock)
             {
-                currencyStock[primaryCurrency] = currencyStock[primaryCurrency].StockUp(inserted);
-                var (newStock, giveBack) = currencyStock[primaryCurrency].PayOut(giveBackValue);
-                currencyStock[primaryCurrency] = newStock;
+                currencyStock[PrimaryCurrency] = currencyStock[PrimaryCurrency].StockUp(inserted);
+                var (newStock, giveBack) = currencyStock[PrimaryCurrency].PayOut(giveBackValue);
+                currencyStock[PrimaryCurrency] = newStock;
                 // can save state here
                 return giveBack;
             }

@@ -1,3 +1,4 @@
+using System;
 using System.Linq;
 
 namespace Teller.Logic
@@ -17,7 +18,17 @@ namespace Teller.Logic
 
         public LegalTenderDefinition GetLegalTender(int value)
         {
-            return LegalTenderList.GetDefinitions().Single(definition => definition.Value == value);
+            var definitions = LegalTenderList.GetDefinitions();
+
+            try
+            {
+                return definitions.Single(definition => definition.Value == value);
+            }
+            catch (InvalidOperationException ex)
+            {
+                throw new InvalidLegalTenderException("Invalid legal tender specified", ex);
+            }
+
         }
 
         public int Rounded(int price)
